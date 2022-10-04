@@ -3,6 +3,7 @@ from fracplant import Fracplant
 from fern import Fern
 from renderer import Renderer
 import pygame as pg
+from math import pi
 
 def main():
     print("Fractal Garden")
@@ -13,9 +14,10 @@ def main():
     clock = pg.time.Clock()
     screen = rendr.screen
     plant = Fracplant()
-    plant.add_fern()
+    plant.add_fern(0, 1, 0)
+    plant.add_fern(0, 0.5, pi/20)
     max_order = 4
-    lines = np.empty(Fern.lines_len(max_order), dtype=tuple)
+    lines = np.empty(Fern.lines_len(max_order)*2, dtype=tuple)
     origin = [550, rendr.height-100]
     fps = 8
     while 1:
