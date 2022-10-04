@@ -1,0 +1,56 @@
+from math import sin, cos
+
+powers = [1, 5, 25, 125, 625, 3125, 15625, 78125]
+scale_dividers = [1, 2.5, 6.25, 15.625, 39.0625, 97.65625, 244.140625, 610.3515625]
+
+class Fern:
+    def __init__(self):
+        pass
+
+    @staticmethod
+    def lines_len(max_order):
+        sz = 0
+        for i in range(max_order + 1):
+            sz += 5**i
+        return sz
+
+    def path_index(self, path):
+        # This can be done in base 5 instead
+        i = 0
+        order = 0
+        for c in path:
+            power = powers[order]
+            if c == 'f': i = i + power 
+            elif c == 'l': i = i + 2*power
+            elif c == 'L': i = i + 3*power
+            elif c == 'r': i = i + 4*power
+            else: i = i + 5*power
+            order += 1
+        return i
+
+    def draw(self, lines, id, order, end, rot, scaleFactor, sway, swayScale, origin):
+        # Precomputed values
+        sinr = sin(rot)
+        cosr = cos(rot)
+
+        ox = origin[0]
+        oy = origin[1]
+        scale = scaleFactor / scale_dividers[order]
+        index = self.path_index(id)
+        if(id == ""): # Fix index of stem
+            index = 0
+        # Add two points forming a line to the lines list
+        lines[index] = ([round(ox), round(oy)], [round(ox - sinr * 4 * scale), round(oy - cosr * 4 * scale)])
+        if order < end:
+            swayOffset = sin(sway) * swayScale
+            # Create five brances, f(forward), l(upper left), L (lower left), r (uppper rigt) and R (lower right)
+            self.draw(lines, id + "f", order+1, end, rot + 0.175 + swayOffset, scaleFactor, sway, swayScale, 
+                [round(ox - sinr * 4 * scale), round(oy - cosr * 4 * scale)])
+            self.draw(lines, id + "l", order+1, end, rot + 1.257 + swayOffset, scaleFactor * 0.667, sway, swayScale, 
+                [round(ox - sinr * 3.5 * scale), round(oy - cosr * 3.5 * scale)])
+            self.draw(lines, id + "L", order+1, end, rot + 1.257 + swayOffset, scaleFactor, sway, swayScale, 
+                [round(ox - sinr * 2 * scale), round(oy - cosr * 2 * scale)])
+            self.draw(lines, id + "r", order+1, end, rot - 0.785 + swayOffset, scaleFactor * 0.667, sway, swayScale, 
+                [round(ox - sinr * 3.5 * scale), round(oy - cosr * 3.5 * scale)])
+            self.draw(lines, id + "R", order+1, end, rot - 0.785 + swayOffset, scaleFactor, sway, swayScale, 
+                [round(ox - sinr * 2 * scale), round(oy - cosr * 2 * scale)])
