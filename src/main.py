@@ -20,27 +20,22 @@ def main():
     clock = pygame.time.Clock()
     fps = 8
     max_order = 4
-    lines = np.empty(5**(max_order + 1) + 1, dtype=tuple) # rename to lines
+    sz = 0
+    for i in range(max_order + 1):
+        sz += 5**i
+    lines = np.empty(sz, dtype=tuple) # rename to lines
     while 1:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 return
         clock.tick(1000.0/fps)
         background.fill((0, 0, 0))
-        #pixels = fractal(1, int(time/100), origin)
-        #pixels = fern(origin, growth)
-        #pixels = myfern(0, 10, pi / 2, origin)
         time = pygame.time.get_ticks()
         growth = 1 - 1 / (1 + time / 10000)
-        #growth = 1
-        origin = (550, height-100)
-        #pixels = fern(origin, growth)
-        #pixels = myfern(0, round(5 * growth * 3)/3, 0, 25 * growth, time / 1000, 0.02, origin)
-        #draw_pixels(background, pixels)
-        #order = round(max_order * growth * 3)/3
-        lightfern(lines, "", 0, max_order, 0, 100 * growth, time / 1000, 0.02, [550, height-100])
-        #print(i)
-        draw_line_points(background, lines)
+        growth2 = 1 - 1 / (1 + time / 600)
+        origin = [550, height-100]
+        lightfern(lines, "", 0, round(max_order), 0, 100 * growth, time / 1000, 0.02, origin)
+        draw_lines(background, lines)
         screen.blit(background, (0,0)) # Display the background, starting at (0,0) and going (+,+)
         pygame.display.flip() # Update display
 
@@ -48,95 +43,52 @@ def pos(x, y, x0, y0, rot):
     return [round(x0 + cos(rot) * x - sin(rot) * y), 
         round(y0 - sin(rot) * x - cos(rot) * y)]
 
+powers = [1, 5, 25, 125, 625, 3125, 15625, 78125]
+scale_dividers = [1, 2.5, 6.25, 15.625, 39.0625, 97.65625, 244.140625, 610.3515625]
+
 def path_index(path):
+    # This can be done in base 5 instead
     i = 0
     order = 0
     for c in path:
-        power = 5**order
+        power = powers[order]
         if c == 'f': i = i + power 
-        elif c == 'l': i = i + 2*power 
-        elif c == 'L': i = i + 3*power 
+        elif c == 'l': i = i + 2*power
+        elif c == 'L': i = i + 3*power
         elif c == 'r': i = i + 4*power
         else: i = i + 5*power
         order += 1
     return i
 
+# My own optimized fern code. In the future, avoid recursion
 def lightfern(lines, id, order, end, rot, scaleFactor, sway, swayScale, origin):
+    # Precomputed values
+    sinr = sin(rot)
+    cosr = cos(rot)
+
     ox = origin[0]
     oy = origin[1]
-    scale = scaleFactor / (2.5**order)
+    scale = scaleFactor / scale_dividers[order]
     index = path_index(id)
-    if(id == ""):
+    if(id == ""): # Fix index of stem
         index = 0
-    lines[index] = (pos(0, 0, ox, oy, rot), pos(0, 4*scale, ox, oy, rot))
+    # Add two points forming a line to the lines list
+    lines[index] = ([round(ox), round(oy)], [round(ox - sinr * 4 * scale), round(oy - cosr * 4 * scale)])
     if order < end:
         swayOffset = sin(sway) * swayScale
-        lightfern(lines, id + "f", order+1, end, rot + pi/18 + swayOffset, scaleFactor, sway, swayScale, pos(0, 4 * scale,ox,oy,rot))
-        lightfern(lines, id + "l", order+1, end, rot + pi/2.5 + swayOffset, scaleFactor*2/3, sway, swayScale, pos(-1, 3.5 * scale,ox,oy,rot))
-        lightfern(lines, id + "L", order+1, end, rot + pi/2.5 + swayOffset, scaleFactor, sway, swayScale, pos(-1, 2 * scale,ox,oy,rot))
-        lightfern(lines, id + "r", order+1, end, rot - pi/4 + swayOffset, scaleFactor*2/3, sway, swayScale, pos(1, 3.5 * scale,ox,oy,rot))
-        lightfern(lines, id + "R", order+1, end, rot - pi/4 + swayOffset, scaleFactor, sway, swayScale, pos(1, 2 * scale,ox,oy,rot))
+        # Create five brances, f(forward), l(upper left), L (lower left), r (uppper rigt) and R (lower right)
+        lightfern(lines, id + "f", order+1, end, rot + 0.175 + swayOffset, scaleFactor, sway, swayScale, 
+            [round(ox - sinr * 4 * scale), round(oy - cosr * 4 * scale)])
+        lightfern(lines, id + "l", order+1, end, rot + 1.257 + swayOffset, scaleFactor * 0.667, sway, swayScale, 
+            [round(ox - sinr * 3.5 * scale), round(oy - cosr * 3.5 * scale)])
+        lightfern(lines, id + "L", order+1, end, rot + 1.257 + swayOffset, scaleFactor, sway, swayScale, 
+            [round(ox - sinr * 2 * scale), round(oy - cosr * 2 * scale)])
+        lightfern(lines, id + "r", order+1, end, rot - 0.785 + swayOffset, scaleFactor * 0.667, sway, swayScale, 
+            [round(ox - sinr * 3.5 * scale), round(oy - cosr * 3.5 * scale)])
+        lightfern(lines, id + "R", order+1, end, rot - 0.785 + swayOffset, scaleFactor, sway, swayScale, 
+            [round(ox - sinr * 2 * scale), round(oy - cosr * 2 * scale)])
 
-"""
-def myfern(order, end, orientation, scaleFactor, sway, swayScale, origin):
-    newPixels = [] # Switch to numpy array. Create one outside the function
-    ox = origin[0]
-    oy = origin[1]
-    scale = scaleFactor / (3**order)
-    pos = lambda x, y: (
-        round(ox + cos(orientation) * x - sin(orientation) * y), 
-        round(oy - sin(orientation) * x - cos(orientation) * y)
-    )
-    for i in range(0, round(5 * scale)):
-        newPixels.append(pos(0, i))
-    if order < end:
-        swayOffset = sin(sway) * swayScale
-        return(newPixels + 
-            myfern(order+1/3, end, orientation + pi/24 + swayOffset, scaleFactor, sway, swayScale, pos(0, 5 * scale)) +
-            myfern(order+1, end, orientation + pi/2.5 + swayOffset, scaleFactor, sway, swayScale, pos(-1, 3 * scale)) +
-            myfern(order+1, end, orientation - pi/4 + swayOffset, scaleFactor, sway, swayScale, pos(1, 3 * scale))
-        )
-    else:
-        return newPixels
-
-def fern(origin, growth):
-    pixels = []
-    x = 0
-    y = 0
-    for n in range(11000):
-        r = random.random()
-        if r < 0.01:
-            x, y =  0.00 * x + 0.00 * y,  0.00 * x + 0.16 * y + 0.00
-        elif r < 0.86:
-            x, y =  0.85 * x + 0.04 * y, -0.04 * x + 0.85 * y + 1.60
-        elif r < 0.93:
-            x, y =  0.20 * x - 0.26 * y,  0.23 * x + 0.22 * y + 1.60
-        else:
-            x, y = -0.15 * x + 0.28 * y,  0.26 * x + 0.24 * y + 0.44
-        pixels.append((x * 65 * growth**2 + origin[0], growth * y * -37 + origin[1]))
-    return pixels
-
-# Spiral fractal
-def fractal(order, end, origin):
-    newPixels = []
-    for i in range(10*order):
-        n = order % 4
-        if n == 0:
-            newPixels.append((origin[0], origin[1] + i))
-        elif n == 1:
-            newPixels.append((origin[0] + i, origin[1]))
-        elif n == 2:
-            newPixels.append((origin[0], origin[1] - i))
-        else:
-            newPixels.append((origin[0] - i, origin[1]))
-    if order < end:
-        startPos = newPixels[-1]
-        return(newPixels + fractal(order+1, end, startPos))
-    else:
-        return newPixels
-"""
-
-def draw_line_points(surface, lines):
+def draw_lines(surface, lines):
     pixel_array = pygame.PixelArray(surface)
     width, height = surface.get_size()
     # Loop through all active pixels
