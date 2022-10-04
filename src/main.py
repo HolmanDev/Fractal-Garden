@@ -24,14 +24,36 @@ def main():
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 return
+            if event.type == pg.KEYDOWN:
+                if event.key == pg.K_c:
+                    # Ask plant num prompt
+                    def ask_plant_num():
+                        answer = input("Which plant to cut?: ")
+                        if answer.isdigit() and int(answer) < len(plant.ferns)\
+                            and not answer.isspace(): return answer
+                        else: return ask_plant_num()
+                    plant_num = int(ask_plant_num())
+                    # Ask cut id prompt. ! Implement check for if branch already cut !
+                    def ask_cut_id():
+                        answer = input("Which branch to cut?: ")
+                        if answer.isdigit(): return ask_cut_id()
+                        else: return answer
+                    cut_id = ask_cut_id()
+                    # Do te cutting
+                    plant.ferns[plant_num].blocked_ids.append(cut_id)
+                    lines = np.empty(Fern.lines_len(max_order)*2, dtype=tuple)
         clock.tick(1000.0/fps)
         screen.fill((0, 0, 0))
         time = pg.time.get_ticks()
         growth = 1 - 1 / (1 + time / 10000)
         #growth2 = 1 - 1 / (1 + time / 600)
-        info = {"lines": lines, "id": "", "order": 0, "end": round(max_order), "rot": 0, 
-            "scale_factor": 80 * growth, "sway": time / 1000, "sway_scale": 0.02, "origin": origin}
-        plant.draw(info)
+        all_info = [
+                {"lines": lines, "id": "", "order": 0, "end": round(max_order), "rot": 0, 
+                    "scale_factor": 80 * growth, "sway": time / 1000, "sway_scale": 0.02, "origin": origin},
+                {"lines": lines, "id": "", "order": 0, "end": round(max_order), "rot": 0, 
+                    "scale_factor": 80 * growth, "sway": time / 1000, "sway_scale": 0.02, "origin": origin}
+        ]
+        plant.draw(all_info)
         rendr.draw_lines(screen, lines)
         rendr.render()
     

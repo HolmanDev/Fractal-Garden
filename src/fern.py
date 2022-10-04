@@ -9,6 +9,8 @@ class Fern:
         self.scale = scale
         self.rot = rot
 
+        self.blocked_ids = []
+
     @staticmethod
     def lines_len(max_order):
         sz = 0
@@ -33,6 +35,7 @@ class Fern:
         return i
 
     def draw(self, fracNum, lines, id, order, end, rot, scaleFactor, sway, swayScale, origin):
+        if id in self.blocked_ids: return
         # Precomputed values
         sinr = sin(rot)
         cosr = cos(rot)
@@ -40,9 +43,20 @@ class Fern:
         ox = origin[0]
         oy = origin[1]
         scale = scaleFactor / scale_dividers[order]
-        index = self.path_index(id, end, fracNum)
+        i = 0
+        o = 0
+        for c in id:
+            power = powers[o]
+            if c == 'f': i = i + power
+            elif c == 'l': i = i + 2*power
+            elif c == 'L': i = i + 3*power
+            elif c == 'r': i = i + 4*power
+            else: i = i + 5*power
+            o += 1
+        offset = fracNum * Fern.lines_len(end) - 1
+        i += offset
         # Add two points forming a line to the lines list
-        lines[index] = ([round(ox), round(oy)], [round(ox - sinr * 4 * scale), round(oy - cosr * 4 * scale)])
+        lines[i] = ([round(ox), round(oy)], [round(ox - sinr * 4 * scale), round(oy - cosr * 4 * scale)])
         if order < end:
             swayOffset = sin(sway) * swayScale
             # Create five brances, f(forward), l(upper left), L (lower left), r (uppper rigt) and R (lower right)
