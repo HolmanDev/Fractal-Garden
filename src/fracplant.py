@@ -41,33 +41,40 @@ class Fracplant:
             a2 = l2[0] - l1[0]
             b2 = l2[1] - l1[1]
             line_length = math.sqrt(a2*a2 + b2*b2)
-            if(line_length == 0) : continue
+            if(line_length == 0) : 
+                i += 1
+                continue
             a2 /= line_length
             b2 /= line_length
 
-            if a1*b2 - a2*b1 == 0 or a1 == 0: 
-                i += 1
+            if a1*b2 - a2*b1 != 0 and a1 != 0:        
+                t2 = (a1*(y1-y2) - b1*(x1-x2)) / (a1*b2 - a2*b1)
+                t1 = (x2-x1+t2*a2)/a1 #a1 = 0?
+            elif a1 == 0: # Remove these elifs?
+                print("Warning!: ", i)
+                t2 = y1 - y2
+            elif a1*b2 - a2*b1 == 0:
+                print("Warning!: ", i)
+                i+=1
                 continue
-            t2 = (a1*(y1-y2) - b1*(x1-x2)) / (a1*b2 - a2*b1)
-            t1 = (x2-x1+t2*a2)/a1
+
             #intersection = (x1 + a1 * t1, y1 + b1 * t1)
+
             if t1 > 0 and t1 < cut_length and t2 > 0 and t2 < line_length:
                 if max_length < line_length:
                     max_length = line_length
                     max_i = i
-                    if i + 1 >= len(info): break
+                    if i + 1 >= len(info): 
+                        id = info[0][1]
+                        break
                     id = info[i+1][1]
-                    print(i)
             i += 1
-        print("id: ", id)
         if id is not None:
             line = lines[max_i]
             pg.draw.line(rendr.screen, (255, 50, 100), line[0], line[1], 3)
-            pg.draw.line(rendr.screen, (255, 0, 0), p1, p2, 1)
-            #rendr.draw_lines(rendr.screen, line, (255, 0, 0))
-            rendr.render()
             self.ferns[fern_num].blocked_ids.append(id)
-            print(self.ferns[fern_num].blocked_ids)
+        pg.draw.line(rendr.screen, (255, 0, 0), p1, p2, 1)
+        rendr.render()
         pg.time.delay(1000)
 
     def draw(self, all_info):

@@ -48,7 +48,6 @@ def main():
                                         cut = True
                                         end_time = pg.time.get_ticks()
                                         time_offset -= end_time - start_time # Account for paused time
-                                        print("filled")
                                         lines.fill((None, None))
                     if event.key == pg.K_c:
                         # Ask plant num prompt
