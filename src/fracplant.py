@@ -1,4 +1,6 @@
 from fern import Fern
+import math
+import pygame as pg
 
 class Fracplant:
     def __init__(self):
@@ -7,6 +9,66 @@ class Fracplant:
 
     def add_fern(self, origin, scale, rot):
         self.ferns.append(Fern(origin, scale, rot))
+
+    def cut(self, fern_num, p1, p2, rendr):
+        print(f"Cut {fern_num} from {p1} to {p2}")
+        lines, info = self.ferns[fern_num].get_points() # include id info also
+        cut_xdiff = p2[0] - p1[0]
+        cut_ydiff = p2[1] - p1[1]
+        cut_length = math.sqrt(cut_xdiff*cut_xdiff + cut_ydiff*cut_ydiff)
+        cut_dir = (cut_xdiff/cut_length, cut_ydiff/cut_length)
+        info.sort(key=lambda x: x[0])
+        i = 0
+        id = None
+        max_length = 0
+        max_i = 0
+        for line in lines:
+            if line[0] == None or line[1] == None:
+                i += 1
+                continue
+            l1 = line[0]
+            l2 = line[1]
+            t1 = 0
+            t2 = 0
+
+            x1 = p1[0]
+            y1 = p1[1]
+            a1 = cut_dir[0]
+            b1 = cut_dir[1]
+
+            x2 = l1[0]
+            y2 = l1[1]
+            a2 = l2[0] - l1[0]
+            b2 = l2[1] - l1[1]
+            line_length = math.sqrt(a2*a2 + b2*b2)
+            if(line_length == 0) : continue
+            a2 /= line_length
+            b2 /= line_length
+
+            if a1*b2 - a2*b1 == 0 or a1 == 0: 
+                i += 1
+                continue
+            t2 = (a1*(y1-y2) - b1*(x1-x2)) / (a1*b2 - a2*b1)
+            t1 = (x2-x1+t2*a2)/a1
+            #intersection = (x1 + a1 * t1, y1 + b1 * t1)
+            if t1 > 0 and t1 < cut_length and t2 > 0 and t2 < line_length:
+                if max_length < line_length:
+                    max_length = line_length
+                    max_i = i
+                    if i + 1 >= len(info): break
+                    id = info[i+1][1]
+                    print(i)
+            i += 1
+        print("id: ", id)
+        if id is not None:
+            line = lines[max_i]
+            pg.draw.line(rendr.screen, (255, 50, 100), line[0], line[1], 3)
+            pg.draw.line(rendr.screen, (255, 0, 0), p1, p2, 1)
+            #rendr.draw_lines(rendr.screen, line, (255, 0, 0))
+            rendr.render()
+            self.ferns[fern_num].blocked_ids.append(id)
+            print(self.ferns[fern_num].blocked_ids)
+        pg.time.delay(1000)
 
     def draw(self, all_info):
         # For example, Draw a fern from a specific order and with 

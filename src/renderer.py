@@ -9,7 +9,7 @@ class Renderer:
     def render(self):
         pg.display.flip() # Update display
 
-    def draw_lines(self, surface, lines):
+    def draw_lines(self, surface, lines, color):
         pixel_array = pg.PixelArray(surface)
         width, height = surface.get_size()
         # Loop through all active pixels
@@ -17,7 +17,7 @@ class Renderer:
         y = 0
         for line in lines: # Is there a faster way?
             # Confine to screen size
-            if(line == None): continue
+            if line[0] == None or line[1] == None: continue
             p1 = line[0]
             p2 = line[1]
             xdiff = p2[0] - p1[0]
@@ -38,8 +38,8 @@ class Renderer:
                 x = int(min(width-1, max(0, x)))
                 y = p1[1] + dy * i
                 y = int(min(height-1, max(0, y)))
-                # Color active pixel white
-                pixel_array[x, y] = (255, 255, 255)
+                # Color active pixel
+                pixel_array[x, y] = color
         pg.pixelcopy.array_to_surface(surface, pixel_array)
         pixel_array.close()
 
