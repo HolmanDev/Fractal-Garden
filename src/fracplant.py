@@ -22,6 +22,8 @@ class Fracplant:
         id = None
         max_length = 0
         max_i = 0
+        blocked_ids = []
+        blocked_indices = []
         for line in lines:
             if line[0] == None or line[1] == None:
                 i += 1
@@ -61,18 +63,19 @@ class Fracplant:
             #intersection = (x1 + a1 * t1, y1 + b1 * t1)
 
             if t1 > 0 and t1 < cut_length and t2 > 0 and t2 < line_length:
-                if max_length < line_length:
-                    max_length = line_length
-                    max_i = i
-                    if i + 1 >= len(info): 
-                        id = info[0][1]
-                        break
+                id = ""
+                if i + 1 >= len(info): 
+                    id = info[0][1]
+                else:
                     id = info[i+1][1]
+                blocked_ids.append(id)
+                blocked_indices.append(i)
             i += 1
         if id is not None:
-            line = lines[max_i]
-            pg.draw.line(rendr.screen, (255, 50, 100), line[0], line[1], 3)
-            self.ferns[fern_num].blocked_ids.append(id)
+            lines_to_draw = [lines[i] for i in blocked_indices]
+            for line in lines_to_draw:
+                pg.draw.line(rendr.screen, (255, 50, 100), line[0], line[1], 3)
+            self.ferns[fern_num].blocked_ids += blocked_ids
         pg.draw.line(rendr.screen, (255, 0, 0), p1, p2, 1)
         rendr.render()
         pg.time.delay(1000)

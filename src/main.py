@@ -24,6 +24,7 @@ def main():
     time_offset = 0
     # Main loop
     frame_time = pg.time.get_ticks()
+    selected_fern = -1
     while 1:
         if pg.time.get_ticks() - frame_time > 1000/fps:
             frame_time = pg.time.get_ticks()
@@ -32,7 +33,7 @@ def main():
                     return
                 if event.type == pg.KEYDOWN:
                     # Cutting
-                    if event.key == pg.K_q:
+                    if event.key == pg.K_q and selected_fern is not -1:
                         cut = False
                         start_time = pg.time.get_ticks()
                         p1 = pg.mouse.get_pos() #p1 placed
@@ -44,7 +45,7 @@ def main():
                                 if e.type == pg.KEYDOWN:
                                     if e.key == pg.K_q:
                                         p2 = pg.mouse.get_pos() #p2 placed
-                                        plant.cut(0, p1, p2, rendr) # cut fracplant from p1 to p2
+                                        plant.cut(selected_fern, p1, p2, rendr) # cut fracplant from p1 to p2
                                         cut = True
                                         end_time = pg.time.get_ticks()
                                         time_offset -= end_time - start_time # Account for paused time
@@ -66,6 +67,12 @@ def main():
                         # Do te cutting
                         plant.ferns[plant_num].blocked_ids.append(cut_id)
                         lines = np.empty(Fern.lines_len(max_order)*2, dtype=tuple)
+                    if event.key == pg.K_0:
+                        selected_fern = -1
+                    if event.key == pg.K_1:
+                        selected_fern = 0
+                    if event.key == pg.K_2:
+                        selected_fern = 1
             clock.tick(fps)
             screen.fill((0, 0, 0))
             #pg.draw.circle(screen, (255, 0, 0), pg.mouse.get_pos(), 4)
@@ -80,6 +87,7 @@ def main():
             ]
             plant.draw(all_info)
             rendr.draw_lines(screen, lines, (255, 255, 255))
+            #rendr.draw_lines(screen, lines[round(len(lines)/2 * selected_fern): round(len(lines)/2 * (1 + selected_fern) - 1)], (0, 255, 0))
             rendr.render()
     
 # Entry point
