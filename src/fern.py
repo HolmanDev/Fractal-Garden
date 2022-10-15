@@ -21,7 +21,7 @@ class Fern:
             sz += 5**i
         return sz
 
-    def get_points(self):
+    def get_line_nodes(self):
         lines = np.zeros(Fern.lines_len(self.info["max_order"]), dtype=tuple)
         lines.fill((None, None))
         info = []

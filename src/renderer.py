@@ -5,17 +5,24 @@ class Renderer:
         self.width = w
         self.height = h
         self.screen = pg.display.set_mode((w, h))
+        self.fps = 8
+
+    def init(self):
+        pg.init()
+
+    def set_fps(self, fps):
+        self.fps = fps
 
     def render(self):
         pg.display.flip() # Update display
 
-    def draw_lines(self, surface, lines, color):
+    def draw_lines(self, surface, line_nodes, color):
         pixel_array = pg.PixelArray(surface)
         width, height = surface.get_size()
         # Loop through all active pixels
         x = 0
         y = 0
-        for line in lines: # Is there a faster way?
+        for line in line_nodes: # Is there a faster way?
             # Confine to screen size
             if line[0] == None or line[1] == None: continue
             p1 = line[0]

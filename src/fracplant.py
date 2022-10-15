@@ -3,16 +3,28 @@ import math
 import pygame as pg
 
 class Fracplant:
-    def __init__(self):
+    def __init__(self, origin, max_order):
         self.ferns = []
-        pass
+        self.lines = []
+        self.max_order = max_order
+        self.origin = origin
+        self.selected_fern = -1
+
+    def set_lines(self, lines):
+        self.lines = lines
+
+    def empty_lines(self):
+        self.lines.fill((None, None))
 
     def add_fern(self, origin, scale, rot):
         self.ferns.append(Fern(origin, scale, rot))
 
+    def select_fern(self, index):
+        self.selected_fern = index
+
     def cut(self, fern_num, p1, p2, rendr):
         print(f"Cut {fern_num} from {p1} to {p2}")
-        lines, info = self.ferns[fern_num].get_points() # include id info also
+        lines, info = self.ferns[fern_num].get_line_nodes() # include id info also
         cut_xdiff = p2[0] - p1[0]
         cut_ydiff = p2[1] - p1[1]
         cut_length = math.sqrt(cut_xdiff*cut_xdiff + cut_ydiff*cut_ydiff)
