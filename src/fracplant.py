@@ -102,3 +102,5 @@ class Fracplant:
                 info["scale_factor"] * fern.scale, info["sway"], info["sway_scale"], info["origin"])
             i += 1
         pass
+
+    # def destroy():

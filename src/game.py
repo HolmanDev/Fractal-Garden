@@ -12,11 +12,18 @@ class Game:
         self.input = InputHandler()
         self.renderer = Renderer(1080, 640)
         self.time_offset = 0
+        self.cutting = False
+        pg.font.init()
+        self.pixel_font_small = pg.font.Font('fonts/Pixeled.ttf', 5)
+        self.x = self.pixel_font_small.render('x', True, (255, 0, 0))
+        self.x_rect = self.x.get_rect()
 
     # Runs at program start
     def start(self):
         self.renderer.init()
         pg.display.set_caption("Fractal Garden")
+        
+        # Load files
 
         clock = pg.time.Clock()
         origin = [550, self.renderer.height-100]
@@ -40,7 +47,8 @@ class Game:
         # Break into keyhandling function
         self.input.handle(self)
         self.renderer.screen.fill((0, 0, 0))
-        #pg.draw.circle(screen, (255, 0, 0), pg.mouse.get_pos(), 4)
+        #pg.draw.circle(self.renderer.screen, (255, 0, 0), pg.mouse.get_pos(), 4)
+        self.x_rect.center = pg.mouse.get_pos()
         time = pg.time.get_ticks() + self.time_offset
         growth = 1 - 1 / (1 + time / 10000)
         all_info = [
@@ -51,20 +59,24 @@ class Game:
         ]
         self.plant.draw(all_info)
         self.renderer.draw_lines(self.renderer.screen, self.plant.lines, (255, 255, 255))
+        self.renderer.screen.blit(self.x, self.x_rect)
         self.renderer.render()
 
     def cut(self, plant, rendr):
-        cut = False
-        p1 = pg.mouse.get_pos() #p1 placed
+        self.cutting = True
+        start_time = pg.time.get_ticks()
+
+        # Cut plant from one point (p1) to another point (p2)
+        p1 = pg.mouse.get_pos() # p1 placed
         # Pause to place p2
-        while not cut:
-            # Poll for second Q-press
-            # BREAK THIS INTO INPUT HANDLER SOMEHOW. Send trigger info pipeline to while loop?
-            es = pg.event.get()
-            for e in es:
-                if e.type == pg.KEYDOWN:
-                    if e.key == pg.K_q:
-                        p2 = pg.mouse.get_pos() #p2 placed
-                        plant.cut(plant.selected_fern, p1, p2, rendr) # cut fracplant from p1 to p2
-                        cut = True                   
-                        plant.lines.fill((None, None))
+        self.input.pop_key(pg.K_q)
+        while not self.input.is_pressed(pg.K_q): 
+            self.input.handle(self)
+        p2 = pg.mouse.get_pos() # p2 placed
+        # cut fracplant from p1 to p2
+        plant.cut(plant.selected_fern, p1, p2, rendr)
+
+        plant.lines.fill((None, None))
+        end_time = pg.time.get_ticks()
+        self.cutting = False 
+        self.time_offset -= end_time - start_time # Account for paused time.

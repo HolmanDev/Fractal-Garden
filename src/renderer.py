@@ -1,14 +1,18 @@
 import pygame as pg
 
+# ONE SURFACE FOR PLANT AND ONE FOR OTHER STUFF
+# THE PLANT ONE IS SLOW, EVERYTHING ELSE IS FAST
+
 class Renderer:
     def __init__(self, w, h):
         self.width = w
         self.height = h
-        self.screen = pg.display.set_mode((w, h))
         self.fps = 8
 
     def init(self):
         pg.init()
+        self.screen = pg.display.set_mode((self.width, self.height))
+        pg.mouse.set_visible(False)
 
     def set_fps(self, fps):
         self.fps = fps
