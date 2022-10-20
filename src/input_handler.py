@@ -15,6 +15,11 @@ class InputHandler:
                 # Cut
                 if not game.cutting and event.key == pg.K_q and game.plant.select_fern is not -1:
                     game.cut(game.plant, game.renderer)
+                # Save
+                if event.key == pg.K_s:
+                    game.save()
+                if event.key == pg.K_r:
+                    game.reset()
                 # Select fracplant
                 if event.key == pg.K_0:
                     game.plant.select_fern(-1)

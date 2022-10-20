@@ -24,7 +24,16 @@ class Game:
         pg.display.set_caption("Fractal Garden")
         
         # Load files
-
+        data = []
+        found_data = False
+        try:
+            with open("saves/recent.txt", 'r') as f:
+                data = f.readlines()
+        except FileNotFoundError:
+            print("No save file found")
+        else:
+            found_data = True
+        
         clock = pg.time.Clock()
         origin = [550, self.renderer.height-100]
         self.plant = Fracplant(origin, 4)
@@ -32,6 +41,13 @@ class Game:
         self.plant.add_fern(0, 0.5, pi/20)
         self.plant.set_lines(np.empty(Fern.lines_len(self.plant.max_order)*2, dtype=tuple))
         self.plant.empty_lines()
+        if(found_data):
+            i = 0
+            for fern in self.plant.ferns:
+                fern_data = data[i].rstrip()
+                fern_data = self.remove_multiple(fern_data, ['{', '}', '[', ']', ',', '\'']).split()
+                fern.blocked_ids = fern_data
+                i += 1
         self.renderer.set_fps(8)
         frame_time = pg.time.get_ticks()
         # Main loop
@@ -71,6 +87,10 @@ class Game:
         # Pause to place p2
         self.input.pop_key(pg.K_q)
         while not self.input.is_pressed(pg.K_q): 
+            self.renderer.screen.fill((0, 0, 0))
+            self.renderer.draw_lines(self.renderer.screen, self.plant.lines, (255, 255, 255)) # again, move this to different surface
+            pg.draw.line(rendr.screen, (100, 100, 100), p1, pg.mouse.get_pos(), 1)
+            self.renderer.render()
             self.input.handle(self)
         p2 = pg.mouse.get_pos() # p2 placed
         # cut fracplant from p1 to p2
@@ -80,3 +100,19 @@ class Game:
         end_time = pg.time.get_ticks()
         self.cutting = False 
         self.time_offset -= end_time - start_time # Account for paused time.
+    
+    def save(self):
+        with open("saves/recent.txt", 'w') as f:
+            data = ""
+            for fern in self.plant.ferns:
+                data += f"{{{str(fern.blocked_ids)}}}\n"
+            f.write(data)
+
+    def reset(self):
+        for fern in self.plant.ferns:
+            fern.blocked_ids = []
+
+    def remove_multiple(self, str, chars):
+        for c in chars:
+            str = str.replace(c, '')
+        return str
