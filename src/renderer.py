@@ -4,10 +4,11 @@ import pygame as pg
 # THE PLANT ONE IS SLOW, EVERYTHING ELSE IS FAST
 
 class Renderer:
-    def __init__(self, w, h):
+    def __init__(self, w, h, bg_color):
         self.width = w
         self.height = h
         self.fps = 8
+        self.bg_color = bg_color
 
     def init(self):
         pg.init()
@@ -28,7 +29,9 @@ class Renderer:
         pg.display.flip() # Update display
     
     def clear(self):
-        self.background.fill((0, 0, 0, 255))
+        self.background.fill(self.bg_color)
+    
+    def clear_ui(self):
         self.ui_layer.fill((0, 0, 0, 0))
 
     def draw_lines(self, surface, line_nodes, color):

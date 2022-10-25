@@ -101,6 +101,5 @@ class Fracplant:
             fern.draw(i, info["lines"], info["id"], info["order"], info["end"], info["rot"] + fern.rot, 
                 info["scale_factor"] * fern.scale, info["sway"], info["sway_scale"], info["origin"])
             i += 1
-        pass
 
     # def destroy():
