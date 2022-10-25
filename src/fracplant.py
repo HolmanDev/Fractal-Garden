@@ -86,9 +86,9 @@ class Fracplant:
         if id is not None:
             lines_to_draw = [lines[i] for i in blocked_indices]
             for line in lines_to_draw:
-                pg.draw.line(rendr.screen, (255, 50, 100), line[0], line[1], 3)
+                pg.draw.line(rendr.fractal_layer, (255, 50, 100, 255), line[0], line[1], 3)
             self.ferns[fern_num].blocked_ids += blocked_ids
-        pg.draw.line(rendr.screen, (255, 0, 0), p1, p2, 1)
+        pg.draw.line(rendr.fractal_layer, (255, 0, 0, 255), p1, p2, 1)
         rendr.render()
         pg.time.delay(1000)
 

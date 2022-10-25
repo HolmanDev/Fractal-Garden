@@ -12,13 +12,24 @@ class Renderer:
     def init(self):
         pg.init()
         self.screen = pg.display.set_mode((self.width, self.height))
+        self.background = pg.Surface(self.screen.get_size(), pg.SRCALPHA)
+        self.fractal_layer = pg.Surface(self.screen.get_size(), pg.SRCALPHA)
+        self.ui_layer = pg.Surface(self.screen.get_size(), pg.SRCALPHA)
         pg.mouse.set_visible(False)
 
     def set_fps(self, fps):
         self.fps = fps
 
     def render(self):
+        self.background.blit(self.fractal_layer, (0, 0))
+        self.background.blit(self.ui_layer, (0,0))
+        self.screen.fill((0, 0, 0))
+        self.screen.blit(self.background, (0,0))
         pg.display.flip() # Update display
+    
+    def clear(self):
+        self.background.fill((0, 0, 0, 255))
+        self.ui_layer.fill((0, 0, 0, 0))
 
     def draw_lines(self, surface, line_nodes, color):
         pixel_array = pg.PixelArray(surface)

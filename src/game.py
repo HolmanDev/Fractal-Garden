@@ -5,6 +5,8 @@ from fern import Fern
 from renderer import Renderer
 import pygame as pg
 from math import pi
+import threading
+import multiprocessing as mp
 
 class Game:
     def __init__(self):
@@ -14,7 +16,7 @@ class Game:
         self.time_offset = 0
         self.cutting = False
         pg.font.init()
-        self.pixel_font_small = pg.font.Font('fonts/Pixeled.ttf', 5)
+        self.pixel_font_small = pg.font.Font('fonts/Pixeled.ttf', 7)
         self.x = self.pixel_font_small.render('x', True, (255, 0, 0))
         self.x_rect = self.x.get_rect()
 
@@ -62,9 +64,17 @@ class Game:
     def update(self):
         # Break into keyhandling function
         self.input.handle(self)
-        self.renderer.screen.fill((0, 0, 0))
+        #self.renderer.screen.fill((0, 0, 0))
+        self.renderer.clear()
         #pg.draw.circle(self.renderer.screen, (255, 0, 0), pg.mouse.get_pos(), 4)
         self.x_rect.center = pg.mouse.get_pos()
+        
+        self.fracplants()
+
+        self.renderer.ui_layer.blit(self.x, self.x_rect)
+        self.renderer.render()
+
+    def fracplants(self):
         time = pg.time.get_ticks() + self.time_offset
         growth = 1 - 1 / (1 + time / 10000)
         all_info = [
@@ -74,9 +84,8 @@ class Game:
                     "scale_factor": 80 * growth, "sway": time / 1000, "sway_scale": 0.02, "origin": self.plant.origin}
         ]
         self.plant.draw(all_info)
-        self.renderer.draw_lines(self.renderer.screen, self.plant.lines, (255, 255, 255))
-        self.renderer.screen.blit(self.x, self.x_rect)
-        self.renderer.render()
+        self.renderer.fractal_layer.fill((0, 0, 0, 0))
+        self.renderer.draw_lines(self.renderer.fractal_layer, self.plant.lines, (255, 255, 255))
 
     def cut(self, plant, rendr):
         self.cutting = True
@@ -87,9 +96,9 @@ class Game:
         # Pause to place p2
         self.input.pop_key(pg.K_q)
         while not self.input.is_pressed(pg.K_q): 
-            self.renderer.screen.fill((0, 0, 0))
-            self.renderer.draw_lines(self.renderer.screen, self.plant.lines, (255, 255, 255)) # again, move this to different surface
-            pg.draw.line(rendr.screen, (100, 100, 100), p1, pg.mouse.get_pos(), 1)
+            self.renderer.fractal_layer.fill((0, 0, 0))
+            self.renderer.draw_lines(self.renderer.fractal_layer, self.plant.lines, (255, 255, 255)) # again, move this to different surface
+            pg.draw.line(rendr.fractal_layer, (100, 100, 100), p1, pg.mouse.get_pos(), 1)
             self.renderer.render()
             self.input.handle(self)
         p2 = pg.mouse.get_pos() # p2 placed
