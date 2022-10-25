@@ -13,8 +13,8 @@ class InputHandler:
                 if event.key not in self.pressed_keys:
                     self.pressed_keys.append(event.key)
                 # Cut
-                if not game.cutting and event.key == pg.K_q and game.plant.select_fern is not -1:
-                    game.cut(game.plant, game.renderer)
+                if not game.cutting and event.key == pg.K_q and game.fracplant.select_branch is not -1:
+                    game.cut(game.fracplant)
                 # Save
                 if event.key == pg.K_s:
                     game.save()
@@ -22,13 +22,13 @@ class InputHandler:
                     game.reset()
                 # Select fracplant
                 if event.key == pg.K_0:
-                    game.plant.select_fern(-1)
+                    game.fracplant.select_branch(-1)
                 if event.key == pg.K_1:
-                    game.plant.select_fern(0)
+                    game.fracplant.select_branch(0)
                 if event.key == pg.K_2:
-                    game.plant.select_fern(1)
+                    game.fracplant.select_branch(1)
             if event.type == pg.KEYUP:
-                if event.key in self.pressed_keys:           
+                if event.key in self.pressed_keys:
                     self.pressed_keys.remove(event.key)
     
     def is_pressed(self, key):

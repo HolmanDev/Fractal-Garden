@@ -1,7 +1,5 @@
 import pygame as pg
-
-# ONE SURFACE FOR PLANT AND ONE FOR OTHER STUFF
-# THE PLANT ONE IS SLOW, EVERYTHING ELSE IS FAST
+from constants import *
 
 class Renderer:
     def __init__(self, w, h, bg_color):
@@ -13,28 +11,40 @@ class Renderer:
     def init(self):
         pg.init()
         self.screen = pg.display.set_mode((self.width, self.height))
-        self.background = pg.Surface(self.screen.get_size(), pg.SRCALPHA)
-        self.fractal_layer = pg.Surface(self.screen.get_size(), pg.SRCALPHA)
-        self.ui_layer = pg.Surface(self.screen.get_size(), pg.SRCALPHA)
+        self.background_layer = pg.Surface(self.screen.get_size(), pg.SRCALPHA) # Intermediate layer
+        self.fractal_layer = pg.Surface(self.screen.get_size(), pg.SRCALPHA) # Fracplants are drawn on this layer
+        self.ui_layer = pg.Surface(self.screen.get_size(), pg.SRCALPHA) # UI is drawn on this layer
+        self.effect_layer = pg.Surface(self.screen.get_size(), pg.SRCALPHA) # Effects are drawn on this layer
         pg.mouse.set_visible(False)
 
+    # Set the frames per second
     def set_fps(self, fps):
         self.fps = fps
 
-    def render(self):
-        self.background.blit(self.fractal_layer, (0, 0))
-        self.background.blit(self.ui_layer, (0,0))
-        self.screen.fill((0, 0, 0))
-        self.screen.blit(self.background, (0,0))
-        pg.display.flip() # Update display
+    def clear_background_layer(self):
+        self.background_layer.fill(self.bg_color)
     
-    def clear(self):
-        self.background.fill(self.bg_color)
-    
-    def clear_ui(self):
-        self.ui_layer.fill((0, 0, 0, 0))
+    def clear_fractal_layer(self):
+        self.fractal_layer.fill(TRANSPARENT_BLACK)
 
+    def clear_ui_layer(self):
+        self.ui_layer.fill(TRANSPARENT_BLACK)
+
+    def clear_effect_layer(self):
+        self.effect_layer.fill(TRANSPARENT_BLACK)
+
+    # Apply all layers to the screen and render it
+    def render(self):
+        self.background_layer.blit(self.fractal_layer, (0, 0))
+        self.background_layer.blit(self.effect_layer, (0, 0))
+        self.background_layer.blit(self.ui_layer, (0,0))
+        self.screen.fill(self.bg_color)
+        self.screen.blit(self.background_layer, (0,0))
+        pg.display.flip() # Update display
+
+    # Draw lines between nodes
     def draw_lines(self, surface, line_nodes, color):
+        # Get information from <surface>
         pixel_array = pg.PixelArray(surface)
         width, height = surface.get_size()
         # Loop through all active pixels
@@ -55,9 +65,9 @@ class Renderer:
                 y = int(min(height-1, max(0, y)))
                 pixel_array[int(x), int(y)] = (255, 255, 255)
                 continue
+            # Draw the lines using interpolation
             dx = xdiff / max_diff
-            dy = ydiff / max_diff
-            
+            dy = ydiff / max_diff        
             for i in range(max_diff):
                 x = p1[0] + dx * i
                 x = int(min(width-1, max(0, x)))
@@ -65,9 +75,11 @@ class Renderer:
                 y = int(min(height-1, max(0, y)))
                 # Color active pixel
                 pixel_array[x, y] = color
+        # Apply result to <surface>
         pg.pixelcopy.array_to_surface(surface, pixel_array)
         pixel_array.close()
 
+    # Not used
     def draw_pixels(self, surface, pixels):
         pixel_array = pg.PixelArray(surface)
         width, height = surface.get_size()

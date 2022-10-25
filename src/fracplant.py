@@ -1,41 +1,48 @@
-from fern import Fern
+from branch import Branch
 import math
 import pygame as pg
+from constants import *
 
 class Fracplant:
     def __init__(self, origin, max_order):
-        self.ferns = []
-        self.lines = []
-        self.max_order = max_order
         self.origin = origin
-        self.selected_fern = -1
+        self.max_order = max_order
 
+        self.branches = []
+        self.lines = []
+        self.selected_branch = -1 # default to invalid index, meaning no selection
+
+    # Set lines (used for preallocation)
     def set_lines(self, lines):
         self.lines = lines
 
+    # Fill lines with filler elements (None, None)
     def empty_lines(self):
         self.lines.fill((None, None))
 
-    def add_fern(self, origin, scale, rot):
-        self.ferns.append(Fern(origin, scale, rot))
+    # Add a branch to the fracplant
+    def add_branch(self, origin, scale, rot):
+        self.branches.append(Branch(origin, scale, rot))
 
-    def select_fern(self, index):
-        self.selected_fern = index
+    # Select one of the fracplant's branches
+    def select_branch(self, index):
+        self.selected_branch = index
 
-    def cut(self, fern_num, p1, p2, rendr):
-        print(f"Cut {fern_num} from {p1} to {p2}")
-        lines, info = self.ferns[fern_num].get_line_nodes() # include id info also
+    # Cut the branch with index <branch_num> from <p1> to <p2>
+    def cut(self, branch_num, p1, p2, renderer):
+        print(f"Cut {branch_num} from {p1} to {p2}")
+        lines, info = self.branches[branch_num].get_lines()
         cut_xdiff = p2[0] - p1[0]
         cut_ydiff = p2[1] - p1[1]
         cut_length = math.sqrt(cut_xdiff*cut_xdiff + cut_ydiff*cut_ydiff)
+        if cut_length == 0: return
         cut_dir = (cut_xdiff/cut_length, cut_ydiff/cut_length)
         info.sort(key=lambda x: x[0])
         i = 0
         id = None
-        max_length = 0
-        max_i = 0
         blocked_ids = []
         blocked_indices = []
+        # Below is just a bunch of math. It works.
         for line in lines:
             if line[0] == None or line[1] == None:
                 i += 1
@@ -61,18 +68,17 @@ class Fracplant:
             a2 /= line_length
             b2 /= line_length
 
-            if a1*b2 - a2*b1 != 0 and a1 != 0:        
+            if a1*b2 - a2*b1 != 0 and a1 != 0:
+                # Use linear algebra to calculate the intersection
                 t2 = (a1*(y1-y2) - b1*(x1-x2)) / (a1*b2 - a2*b1)
-                t1 = (x2-x1+t2*a2)/a1 #a1 = 0?
-            elif a1 == 0: # Remove these elifs?
+                t1 = (x2-x1+t2*a2)/a1
+            elif a1 == 0:
                 print("Warning!: ", i)
                 t2 = y1 - y2
             elif a1*b2 - a2*b1 == 0:
                 print("Warning!: ", i)
                 i+=1
                 continue
-
-            #intersection = (x1 + a1 * t1, y1 + b1 * t1)
 
             if t1 > 0 and t1 < cut_length and t2 > 0 and t2 < line_length:
                 id = ""
@@ -83,23 +89,25 @@ class Fracplant:
                 blocked_ids.append(id)
                 blocked_indices.append(i)
             i += 1
+        # If a branch was intersected
         if id is not None:
             lines_to_draw = [lines[i] for i in blocked_indices]
             for line in lines_to_draw:
-                pg.draw.line(rendr.fractal_layer, (255, 50, 100, 255), line[0], line[1], 3)
-            self.ferns[fern_num].blocked_ids += blocked_ids
-        pg.draw.line(rendr.fractal_layer, (255, 0, 0, 255), p1, p2, 1)
-        rendr.render()
+                pg.draw.line(renderer.fractal_layer, HOT_PINK, line[0], line[1], 3)
+            self.branches[branch_num].blocked_ids += blocked_ids
+        pg.draw.line(renderer.fractal_layer, RED, p1, p2, 1)
+        renderer.render()
         pg.time.delay(1000)
 
-    def draw(self, all_info):
-        # For example, Draw a fern from a specific order and with 
-        # a certain scale, and then add other fractals
+    # Generate this fracplant by generating all its branches
+    def generate(self, all_info):
         i = 0
-        for fern in self.ferns:
+        for branch in self.branches:
             info = all_info[0]
-            fern.draw(i, info["lines"], info["id"], info["order"], info["end"], info["rot"] + fern.rot, 
-                info["scale_factor"] * fern.scale, info["sway"], info["sway_scale"], info["origin"])
+            branch.generate(i, info["lines"], info["id"], info["order"], info["end"], info["rot"] + branch.rot, 
+                info["scale_factor"] * branch.scale, info["sway"], info["sway_scale"], info["origin"])
             i += 1
 
-    # def destroy():
+    # Destroy this fracplant
+    def destroy():
+        pass

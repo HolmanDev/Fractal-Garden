@@ -4,7 +4,7 @@ import numpy as np
 powers = [1, 5, 25, 125, 625, 3125, 15625, 78125]
 scale_dividers = [1, 2.5, 6.25, 15.625, 39.0625, 97.65625, 244.140625, 610.3515625]
 
-class Fern:
+class Branch:
     #Store last info
     def __init__(self, attachment_node, scale, rot):
         self.attachment_node = attachment_node
@@ -21,15 +21,15 @@ class Fern:
             sz += 5**i
         return sz
 
-    def get_line_nodes(self):
-        lines = np.zeros(Fern.lines_len(self.info["max_order"]), dtype=tuple)
+    def get_lines(self):
+        lines = np.zeros(Branch.lines_len(self.info["max_order"]), dtype=tuple)
         lines.fill((None, None))
         info = []
-        self.draw(0, lines, "", 0, self.info["max_order"], self.info["rot"], self.info["scale_factor"],
+        self.generate(0, lines, "", 0, self.info["max_order"], self.info["rot"], self.info["scale_factor"],
             self.info["sway"], self.info["sway_scale"], self.info["origin"], info=info)
         return lines, info
 
-    def draw(self, fracNum, lines, id, order, end, rot, scaleFactor, sway, swayScale, origin, info=None):
+    def generate(self, fracNum, lines, id, order, end, rot, scaleFactor, sway, swayScale, origin, info=None):
         if id == "":
             self.info = {"max_order": end, "rot": rot, "scale_factor": scaleFactor, 
                 "sway": sway, "sway_scale": swayScale, "origin": origin}
@@ -51,7 +51,7 @@ class Fern:
             elif c == 'r': i = i + 4*power
             else: i = i + 5*power
             o += 1
-        offset = fracNum * Fern.lines_len(end) - 1
+        offset = fracNum * Branch.lines_len(end) - 1
         i += offset
         if info is not None:
             info.append([i, id])
@@ -69,13 +69,13 @@ class Fern:
         if order < end:
             swayOffset = sin(sway) * swayScale
             # Create five brances, f(forward), l(upper left), L (lower left), r (uppper rigt) and R (lower right)
-            self.draw(fracNum, lines, id + "f", order+1, end, rot + 0.175 + swayOffset, scaleFactor, sway, swayScale, 
+            self.generate(fracNum, lines, id + "f", order+1, end, rot + 0.175 + swayOffset, scaleFactor, sway, swayScale, 
                 [round(ox - sinr * 4 * scale), round(oy - cosr * 4 * scale)], info=info)
-            self.draw(fracNum, lines, id + "l", order+1, end, rot + 1.257 + swayOffset, scaleFactor * 0.667, sway, swayScale, 
+            self.generate(fracNum, lines, id + "l", order+1, end, rot + 1.257 + swayOffset, scaleFactor * 0.667, sway, swayScale, 
                 [round(ox - sinr * 3.5 * scale), round(oy - cosr * 3.5 * scale)], info=info)
-            self.draw(fracNum, lines, id + "L", order+1, end, rot + 1.257 + swayOffset, scaleFactor, sway, swayScale, 
+            self.generate(fracNum, lines, id + "L", order+1, end, rot + 1.257 + swayOffset, scaleFactor, sway, swayScale, 
                 [round(ox - sinr * 2 * scale), round(oy - cosr * 2 * scale)], info=info)
-            self.draw(fracNum, lines, id + "r", order+1, end, rot - 0.785 + swayOffset, scaleFactor * 0.667, sway, swayScale, 
+            self.generate(fracNum, lines, id + "r", order+1, end, rot - 0.785 + swayOffset, scaleFactor * 0.667, sway, swayScale, 
                 [round(ox - sinr * 3.5 * scale), round(oy - cosr * 3.5 * scale)], info=info)
-            self.draw(fracNum, lines, id + "R", order+1, end, rot - 0.785 + swayOffset, scaleFactor, sway, swayScale, 
+            self.generate(fracNum, lines, id + "R", order+1, end, rot - 0.785 + swayOffset, scaleFactor, sway, swayScale, 
                 [round(ox - sinr * 2 * scale), round(oy - cosr * 2 * scale)], info=info)
