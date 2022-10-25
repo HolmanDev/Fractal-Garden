@@ -1,13 +1,11 @@
 import numpy as np
-from fracplant import Fracplant
+from fracplant import Fracplant, calculate_fracplants
 from input_handler import InputHandler
 from branch import Branch
 from renderer import Renderer
 import pygame as pg
 from math import pi
-import threading
 import multiprocessing as mp
-from time import sleep
 from constants import *
 
 class Game:
@@ -153,9 +151,9 @@ class Game:
     # Start a parallell process to calculate the fracplants
     def start_fracplant_process(self):
         self.fracplant_process_queue = mp.Queue() # Use queue instead to send kill-call
-        self.calc_process = mp.Process(target=calculate_fracplants, 
+        self.fracplant_process = mp.Process(target=calculate_fracplants, 
             args=(self.fracplant, self.fracplant_process_queue, self.time_offset))
-        self.calc_process.start()
+        self.fracplant_process.start()
 
     # Pause the parallell process calculating the fracplants
     def pause_fracplant_process(self):
@@ -168,57 +166,21 @@ class Game:
     # End the parallell process calculating the fracplants
     def end_fracplant_process(self):
         self.fracplant_process_queue.put([1, "die"]) # Send a "kill message" to the other process
-        self.calc_process.join() # Join other process with current process
-        self.calc_process.close() # Close the other process
+        self.fracplant_process.terminate() # Terminate
+        self.fracplant_process.join() # Join other process with current process
+        self.fracplant_process.close() # Close the other process
 
     # Sends a new version of <plant> to the fracplant calculation process
     def update_fracplant_process(self, plant):
         self.fracplant_process_queue.put([1, plant])
+
+    # Quit game
+    def quit(self):
+        self.end_fracplant_process()
+        self.fracplant.destroy()
 
     # MISC
     def remove_multiple(self, str, chars):
         for c in chars:
             str = str.replace(c, '')
         return str
-
-# Calculates the points and lines constituting the fracplants. Multiprocessing requires this to be outside all classes
-def calculate_fracplants(fracplant, queue, time_offset):
-    pg.init()
-    on = True
-    start_time = pg.time.get_ticks() + time_offset
-    while 1:
-        # Read and act on messages on the fracplant calculation queue
-        messages = []
-        while not queue.empty():
-            messages.append(queue.get())
-        for msg in messages:
-            if len(msg): # Did we get anything?
-                if msg[0] == 1: # This is for me, I'll take it
-                    data = msg[1]
-                    if data == "die":
-                        return
-                    elif data == "pause":
-                        on = False
-                        continue
-                    elif data == "unpause":
-                        time_offset -= pg.time.get_ticks() + time_offset - start_time
-                        on = True
-                    else:
-                        fracplant = data
-                elif msg[0] == 0: # This is not for me, send it back
-                    queue.put(msg)
-        
-        # Calculate the nodes and lines of <fracplant>
-        if on:
-            start_time = pg.time.get_ticks() + time_offset # Time before calculation
-            growth = 1 - 1 / (1 + start_time / 10000) # Arbitrary growth equation
-            all_info = [
-                {"lines": fracplant.lines, "id": "", "order": 0, "end": round(fracplant.max_order), "rot": 0, 
-                    "scale_factor": 80 * growth, "sway": start_time / 1000, "sway_scale": 0.05, "origin": fracplant.origin},
-                {"lines": fracplant.lines, "id": "", "order": 0, "end": round(fracplant.max_order), "rot": 0, 
-                    "scale_factor": 80 * growth, "sway": start_time / 1000, "sway_scale": 0.02, "origin": fracplant.origin}
-            ]
-            fracplant.generate(all_info)
-            queue.put([0, [fracplant.lines, [branch.info for branch in fracplant.branches]]])
-            end_time = pg.time.get_ticks() + time_offset # Time after calculation
-            sleep(1/8 - min((end_time - start_time)/1000.0, 1/8)) # Only execute every 8th second

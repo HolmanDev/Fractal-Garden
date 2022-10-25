@@ -8,13 +8,16 @@ class Renderer:
         self.fps = 8
         self.bg_color = bg_color
 
-    def init(self):
-        pg.init()
+        # Create screen and layers
         self.screen = pg.display.set_mode((self.width, self.height))
         self.background_layer = pg.Surface(self.screen.get_size(), pg.SRCALPHA) # Intermediate layer
         self.fractal_layer = pg.Surface(self.screen.get_size(), pg.SRCALPHA) # Fracplants are drawn on this layer
         self.ui_layer = pg.Surface(self.screen.get_size(), pg.SRCALPHA) # UI is drawn on this layer
         self.effect_layer = pg.Surface(self.screen.get_size(), pg.SRCALPHA) # Effects are drawn on this layer
+
+    # Initialize renderer and hide mouse
+    def init(self):
+        pg.init()
         pg.mouse.set_visible(False)
 
     # Set the frames per second

@@ -7,13 +7,15 @@ class InputHandler:
     def handle(self, game):
         for event in pg.event.get():
             if event.type == pg.QUIT:
+                print("Tried quitting")
+                game.quit()
                 pg.quit()
                 quit()
             if event.type == pg.KEYDOWN:
                 if event.key not in self.pressed_keys:
                     self.pressed_keys.append(event.key)
                 # Cut
-                if not game.cutting and event.key == pg.K_q and game.fracplant.select_branch is not -1:
+                if not game.cutting and event.key == pg.K_q and game.fracplant.select_branch != -1:
                     game.cut(game.fracplant)
                 # Save
                 if event.key == pg.K_s:

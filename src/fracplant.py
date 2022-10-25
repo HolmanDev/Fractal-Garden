@@ -2,6 +2,7 @@ from branch import Branch
 import math
 import pygame as pg
 from constants import *
+from time import sleep
 
 class Fracplant:
     def __init__(self, origin, max_order):
@@ -28,9 +29,17 @@ class Fracplant:
     def select_branch(self, index):
         self.selected_branch = index
 
+    # Generate this fracplant by generating all its branches
+    def generate(self, all_info):
+        i = 0
+        for branch in self.branches:
+            info = all_info[0]
+            branch.generate(i, info["lines"], info["id"], info["order"], info["end"], info["rot"] + branch.rot, 
+                info["scale_factor"] * branch.scale, info["sway"], info["sway_scale"], info["origin"])
+            i += 1
+
     # Cut the branch with index <branch_num> from <p1> to <p2>
     def cut(self, branch_num, p1, p2, renderer):
-        print(f"Cut {branch_num} from {p1} to {p2}")
         lines, info = self.branches[branch_num].get_lines()
         cut_xdiff = p2[0] - p1[0]
         cut_ydiff = p2[1] - p1[1]
@@ -99,15 +108,49 @@ class Fracplant:
         renderer.render()
         pg.time.delay(1000)
 
-    # Generate this fracplant by generating all its branches
-    def generate(self, all_info):
-        i = 0
-        for branch in self.branches:
-            info = all_info[0]
-            branch.generate(i, info["lines"], info["id"], info["order"], info["end"], info["rot"] + branch.rot, 
-                info["scale_factor"] * branch.scale, info["sway"], info["sway_scale"], info["origin"])
-            i += 1
-
     # Destroy this fracplant
-    def destroy():
+    def destroy(self):
         pass
+        #print("Destroyed a fracplant")
+
+# Calculates the points and lines constituting the fracplants. Multiprocessing requires this to be outside all classes
+def calculate_fracplants(fracplant, queue, time_offset):
+    pg.init()
+    on = True
+    start_time = pg.time.get_ticks() + time_offset
+    while 1:
+        # Read and act on messages on the fracplant calculation queue
+        messages = []
+        while not queue.empty():
+            messages.append(queue.get())
+        for msg in messages:
+            if len(msg): # Did we get anything?
+                if msg[0] == 1: # This is for me, I'll take it
+                    data = msg[1]
+                    if data == "die":
+                        return
+                    elif data == "pause":
+                        on = False
+                        continue
+                    elif data == "unpause":
+                        time_offset -= pg.time.get_ticks() + time_offset - start_time
+                        on = True
+                    else:
+                        fracplant = data
+                elif msg[0] == 0: # This is not for me, send it back
+                    queue.put(msg)
+        
+        # Calculate the nodes and lines of <fracplant>
+        if on:
+            start_time = pg.time.get_ticks() + time_offset # Time before calculation
+            growth = 1 - 1 / (1 + start_time / 10000) # Arbitrary growth equation
+            all_info = [
+                {"lines": fracplant.lines, "id": "", "order": 0, "end": round(fracplant.max_order), "rot": 0, 
+                    "scale_factor": 80 * growth, "sway": start_time / 1000, "sway_scale": 0.05, "origin": fracplant.origin},
+                {"lines": fracplant.lines, "id": "", "order": 0, "end": round(fracplant.max_order), "rot": 0, 
+                    "scale_factor": 80 * growth, "sway": start_time / 1000, "sway_scale": 0.02, "origin": fracplant.origin}
+            ]
+            fracplant.generate(all_info)
+            queue.put([0, [fracplant.lines, [branch.info for branch in fracplant.branches]]])
+            end_time = pg.time.get_ticks() + time_offset # Time after calculation
+            sleep(1/8 - min((end_time - start_time)/1000.0, 1/8)) # Only execute every 8th second
