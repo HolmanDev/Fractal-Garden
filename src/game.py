@@ -7,7 +7,10 @@ import pygame as pg
 from math import pi
 import multiprocessing as mp
 from constants import *
+import utils
+from config import Config
 
+# Contains the game logic and event loop
 class Game:
     def __init__(self):
         self.fracplant = None
@@ -16,10 +19,7 @@ class Game:
         self.time_offset = 0
         self.cutting = False
 
-        pg.font.init()
-        self.pixel_font_small = pg.font.Font('fonts/Pixeled.ttf', 7)
-        self.x = self.pixel_font_small.render('x', True, RED)
-        self.x_rect = self.x.get_rect()
+        self.load_fonts()
 
     # Runs at program start
     def start(self):
@@ -36,24 +36,30 @@ class Game:
             print("No save file found")
         else:
             found_data = True
-        
+
+        self.cursor = self.cursor_font.render('x', True, RED)
+        self.cursor_rect = self.cursor.get_rect()
+        self.fracplant_label = self.medium_text_font.render('UNNAMED', True, WHITE)
+        self.fracplant_label_rect = self.fracplant_label.get_rect()
+        self.fracplant_label_rect.center = (self.renderer.width/2, 50)
         clock = pg.time.Clock()
+
+        # Fracplant
         origin = [550, self.renderer.height-100]
         self.fracplant = Fracplant(origin, 4)
         self.fracplant.add_branch(0, 1, 0)
         self.fracplant.add_branch(0, 0.5, pi/20)
         self.fracplant.set_lines(np.empty(Branch.lines_len(self.fracplant.max_order)*2, dtype=tuple))
         self.fracplant.empty_lines()
-        if(found_data):
-            i = 0
-            for branch in self.fracplant.branches:
-                branch_data = data[i].rstrip()
-                branch_data = self.remove_multiple(branch_data, ['{', '}', '[', ']', ',', '\'']).split()
-                branch.blocked_ids = branch_data
-                i += 1
+        if(found_data): # Apply data from save file
+            for i, branch in enumerate(self.fracplant.branches):
+                branch_data = data[i].rstrip() # Remove trailing newline
+                blocked_ids = utils.remove_multiple_chars(branch_data, ['{', '}', '[', ']', ',', '\'']).split() # Remove meaningsless symbols
+                branch.blocked_ids = blocked_ids
+        self.start_fracplant_process() # Multiprocessing
+
         self.renderer.set_fps(32)
         frame_time = pg.time.get_ticks()
-        self.start_fracplant_process() # Multiprocessing
         # Main loop
         while 1:
             # Make time between frames for calculations. Threads?
@@ -69,19 +75,30 @@ class Game:
 
         # Generate visuals
         self.renderer.clear_background_layer()
-        self.generate_ui()
-        self.generate_fracplants()
+        self.display_ui()
+        self.display_fracplants()
 
         # Render
         self.renderer.render()
 
-    def generate_ui(self):
+    # Create fonts for different uses based on configs
+    def load_fonts(self):
+        pg.font.init()
+        self.cursor_font = pg.font.Font(Config.cursor_font, Config.cursor_size)
+        self.small_text_font = pg.font.Font(Config.small_text_font, Config.small_text_size)
+        self.medium_text_font = pg.font.Font(Config.medium_text_font, Config.medium_text_size)
+        self.large_text_font = pg.font.Font(Config.large_text_font, Config.large_text_size)
+
+    # Display the UI, including the cursor marker
+    def display_ui(self):
         self.renderer.clear_ui_layer()
         mouse_pos = pg.mouse.get_pos()
-        self.x_rect.center = (mouse_pos[0]+2, mouse_pos[1]-1)
-        self.renderer.ui_layer.blit(self.x, self.x_rect)
+        self.cursor_rect.center = (mouse_pos[0]+2, mouse_pos[1]-1)
+        self.renderer.ui_layer.blit(self.cursor, self.cursor_rect)
+        self.renderer.ui_layer.blit(self.fracplant_label, self.fracplant_label_rect)
 
-    def generate_fracplants(self):
+    # Display calculated fracplants
+    def display_fracplants(self):
         # Read and act on messages from fracplant process queue
         messages = []
         while not self.fracplant_process_queue.empty():
@@ -91,10 +108,8 @@ class Game:
                 if msg[0] == 0: # This is for me, I'll take it
                     data = msg[1]
                     self.fracplant.set_lines(data[0])
-                    i = 0
-                    for branch in self.fracplant.branches:
+                    for i, branch in enumerate(self.fracplant.branches):
                         branch.info = data[1][i]
-                        i+=1
                 elif msg[0] == 1: # This is not for me, send it back
                     self.fracplant_process_queue.put(msg)
         # Draw
@@ -114,9 +129,9 @@ class Game:
         while not self.input.is_pressed(pg.K_q):
             self.renderer.clear_background_layer()
             self.renderer.clear_effect_layer()
-            self.generate_ui() # Continue to move the cross-cursor
-            self.x_rect.center = (p1[0]+2, p1[1]-1)
-            self.renderer.ui_layer.blit(self.x, self.x_rect) # Put an x on p1
+            self.display_ui() # Continue to move the cross-cursor
+            self.cursor_rect.center = (p1[0]+2, p1[1]-1)
+            self.renderer.ui_layer.blit(self.cursor, self.cursor_rect) # Put an x on p1
 
             pg.draw.line(self.renderer.effect_layer, DARK_GREY, p1, pg.mouse.get_pos(), 1)
             self.renderer.render()
@@ -147,7 +162,7 @@ class Game:
             branch.blocked_ids = []
         self.fracplant_process_queue.put([1, self.fracplant])
 
-    # MULTIPROCESSING
+    # ---- MULTIPROCESSING ----
     # Start a parallell process to calculate the fracplants
     def start_fracplant_process(self):
         self.fracplant_process_queue = mp.Queue() # Use queue instead to send kill-call
@@ -178,9 +193,3 @@ class Game:
     def quit(self):
         self.end_fracplant_process()
         self.fracplant.destroy()
-
-    # MISC
-    def remove_multiple(self, str, chars):
-        for c in chars:
-            str = str.replace(c, '')
-        return str

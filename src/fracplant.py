@@ -4,6 +4,7 @@ import pygame as pg
 from constants import *
 from time import sleep
 
+# A plant made of fractals. Can be grown and cut to desired shape
 class Fracplant:
     def __init__(self, origin, max_order):
         self.origin = origin
@@ -31,12 +32,10 @@ class Fracplant:
 
     # Generate this fracplant by generating all its branches
     def generate(self, all_info):
-        i = 0
-        for branch in self.branches:
+        for i, branch in enumerate(self.branches):
             info = all_info[0]
             branch.generate(i, info["lines"], info["id"], info["order"], info["end"], info["rot"] + branch.rot, 
                 info["scale_factor"] * branch.scale, info["sway"], info["sway_scale"], info["origin"])
-            i += 1
 
     # Cut the branch with index <branch_num> from <p1> to <p2>
     def cut(self, branch_num, p1, p2, renderer):

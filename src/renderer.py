@@ -1,6 +1,7 @@
 import pygame as pg
 from constants import *
 
+# Handles what is displayed on the screen
 class Renderer:
     def __init__(self, w, h, bg_color):
         self.width = w

@@ -4,6 +4,7 @@ import numpy as np
 powers = [1, 5, 25, 125, 625, 3125, 15625, 78125]
 scale_dividers = [1, 2.5, 6.25, 15.625, 39.0625, 97.65625, 244.140625, 610.3515625]
 
+# A branch of a fracplant, almost like a mini fracplant
 class Branch:
     #Store last info
     def __init__(self, attachment_node, scale, rot):
