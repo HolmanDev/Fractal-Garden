@@ -1,7 +1,7 @@
 from game import Game
 
 def main():
-    print("Fractal Garden")
+    print("Welcome to Fractal Garden!")
     game = Game()
     game.start()
     

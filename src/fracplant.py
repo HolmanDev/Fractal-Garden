@@ -1,3 +1,5 @@
+import os
+os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "True"
 import pygame as pg
 import math
 from time import sleep
@@ -7,7 +9,8 @@ from constants import *
 
 # A plant made of fractals. Can be grown and cut to desired shape
 class Fracplant:
-    def __init__(self, origin, max_order, color):
+    def __init__(self, name, origin, max_order, color):
+        self.name = name
         self.origin = origin
         self.max_order = max_order
         self.color = color
@@ -22,6 +25,12 @@ class Fracplant:
     # Fill lines with filler elements (None, None)
     def empty_lines(self):
         self.lines.fill((None, None))
+
+    def set_name(self, name):
+        self.name = name
+
+    def default_name(self):
+        self.name = "UNNAMED"
 
     # Add a branch to the fracplant
     def add_branch(self, origin, scale, rot):
@@ -140,7 +149,7 @@ def calculate_fracplants(fracplant, queue, time_offset):
         # Calculate the nodes and lines of <fracplant>
         if on:
             start_time = pg.time.get_ticks() + time_offset # Time before calculation
-            growth = 1 - 1 / (1 + start_time / 10000) # Arbitrary growth equation
+            growth = 1 - 1 / (1 + start_time / 20000) # Arbitrary growth equation
             all_info = [
                 {"lines": fracplant.lines, "id": "", "order": 0, "end": round(fracplant.max_order), "rot": 0, 
                     "scale_factor": 80 * growth, "sway": start_time / 1000, "sway_scale": 0.05, "origin": fracplant.origin},

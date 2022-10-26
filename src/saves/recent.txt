@@ -1,2 +1,0 @@
-{['ff', 'ffRf', 'ffRL', 'ffLR', 'l', 'L', 'LR', 'RRf', 'RRr', 'RRRf', 'RRfL', 'fLf', 'fLlf']}
-{['ff', 'fl', 'fLf', 'flR', 'frLf', 'fLrf', 'fLfl', 'fLfR', 'Lff', 'Lfl', 'Lfll', 'Lfrl', 'LfrL', 'LflR']}
