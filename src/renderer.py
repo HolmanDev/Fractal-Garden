@@ -1,4 +1,5 @@
 import pygame as pg
+
 from constants import *
 
 # Handles what is displayed on the screen
@@ -15,6 +16,10 @@ class Renderer:
         self.fractal_layer = pg.Surface(self.screen.get_size(), pg.SRCALPHA) # Fracplants are drawn on this layer
         self.ui_layer = pg.Surface(self.screen.get_size(), pg.SRCALPHA) # UI is drawn on this layer
         self.effect_layer = pg.Surface(self.screen.get_size(), pg.SRCALPHA) # Effects are drawn on this layer
+
+        # Change logo
+        logo = pg.image.load("images/icon_44x44.png")
+        pg.display.set_icon(logo)
 
     # Initialize renderer and hide mouse
     def init(self):
@@ -67,7 +72,7 @@ class Renderer:
                 x = int(min(width-1, max(0, x)))
                 y = p1[1]
                 y = int(min(height-1, max(0, y)))
-                pixel_array[int(x), int(y)] = (255, 255, 255)
+                pixel_array[int(x), int(y)] = color
                 continue
             # Draw the lines using interpolation
             dx = xdiff / max_diff

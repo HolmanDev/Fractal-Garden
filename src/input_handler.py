@@ -19,20 +19,13 @@ class InputHandler:
                 if event.key not in self.pressed_keys:
                     self.pressed_keys.append(event.key)
                 # Cut
-                if not game.cutting and event.key == pg.K_q and game.fracplant.select_branch != -1:
+                if not game.cutting and event.key == pg.K_q:
                     game.cut(game.fracplant)
                 # Save
                 if event.key == pg.K_s:
                     game.save()
                 if event.key == pg.K_r:
                     game.reset()
-                # Select fracplant
-                if event.key == pg.K_0:
-                    game.fracplant.select_branch(-1)
-                if event.key == pg.K_1:
-                    game.fracplant.select_branch(0)
-                if event.key == pg.K_2:
-                    game.fracplant.select_branch(1)
             
             # Key lifted
             if event.type == pg.KEYUP:

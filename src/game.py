@@ -1,13 +1,14 @@
-import numpy as np
-from fracplant import Fracplant, calculate_fracplants
-from input_handler import InputHandler
-from branch import Branch
-from renderer import Renderer
 import pygame as pg
 from math import pi
 import multiprocessing as mp
+
+from fracplant import Fracplant, calculate_fracplants
+from branch import Branch
+from renderer import Renderer
+from input_handler import InputHandler
+import numpy as np
 from constants import *
-import utils
+from utils import Utils
 from config import Config
 
 # Contains the game logic and event loop
@@ -26,7 +27,7 @@ class Game:
         self.renderer.init()
         pg.display.set_caption("Fractal Garden")
         
-        # Load files
+        # Load save files
         data = []
         found_data = False
         try:
@@ -37,16 +38,16 @@ class Game:
         else:
             found_data = True
 
+        # UI
         self.cursor = self.cursor_font.render('x', True, RED)
         self.cursor_rect = self.cursor.get_rect()
         self.fracplant_label = self.medium_text_font.render('UNNAMED', True, WHITE)
         self.fracplant_label_rect = self.fracplant_label.get_rect()
         self.fracplant_label_rect.center = (self.renderer.width/2, 50)
-        clock = pg.time.Clock()
 
         # Fracplant
         origin = [550, self.renderer.height-100]
-        self.fracplant = Fracplant(origin, 4)
+        self.fracplant = Fracplant(origin, 4, WHITE)
         self.fracplant.add_branch(0, 1, 0)
         self.fracplant.add_branch(0, 0.5, pi/20)
         self.fracplant.set_lines(np.empty(Branch.lines_len(self.fracplant.max_order)*2, dtype=tuple))
@@ -54,11 +55,12 @@ class Game:
         if(found_data): # Apply data from save file
             for i, branch in enumerate(self.fracplant.branches):
                 branch_data = data[i].rstrip() # Remove trailing newline
-                blocked_ids = utils.remove_multiple_chars(branch_data, ['{', '}', '[', ']', ',', '\'']).split() # Remove meaningsless symbols
+                blocked_ids = Utils.remove_multiple_chars(branch_data, ['{', '}', '[', ']', ',', '\'']).split() # Remove meaningsless symbols
                 branch.blocked_ids = blocked_ids
         self.start_fracplant_process() # Multiprocessing
 
         self.renderer.set_fps(32)
+        clock = pg.time.Clock()
         frame_time = pg.time.get_ticks()
         # Main loop
         while 1:
@@ -114,7 +116,7 @@ class Game:
                     self.fracplant_process_queue.put(msg)
         # Draw
         self.renderer.clear_fractal_layer()
-        self.renderer.draw_lines(self.renderer.fractal_layer, self.fracplant.lines, WHITE)
+        self.renderer.draw_lines(self.renderer.fractal_layer, self.fracplant.lines, self.fracplant.color)
 
     # Cut all branches on <fracplant> that intersects a line between two points
     def cut(self, fracplant):
@@ -129,16 +131,15 @@ class Game:
         while not self.input.is_pressed(pg.K_q):
             self.renderer.clear_background_layer()
             self.renderer.clear_effect_layer()
-            self.display_ui() # Continue to move the cross-cursor
+            self.display_ui() # Continue to move the x-cursor
             self.cursor_rect.center = (p1[0]+2, p1[1]-1)
             self.renderer.ui_layer.blit(self.cursor, self.cursor_rect) # Put an x on p1
-
             pg.draw.line(self.renderer.effect_layer, DARK_GREY, p1, pg.mouse.get_pos(), 1)
             self.renderer.render()
             self.input.handle(self)
         p2 = pg.mouse.get_pos() # p2 placed
         # Perform a cut on <fracplant> from <p1> to <p2>
-        fracplant.cut(fracplant.selected_branch, p1, p2, self.renderer)
+        fracplant.cut(p1, p2, self.renderer)
 
         fracplant.lines.fill((None, None))
         end_time = pg.time.get_ticks()
