@@ -5,7 +5,7 @@ class Config:
     cursor_font = 'fonts/Pixeled.ttf'
     cursor_size = 7
     small_text_font = 'fonts/Pixeled.ttf'
-    small_text_size = 7
+    small_text_size = 10
     medium_text_font = 'fonts/Pixeled.ttf'
     medium_text_size = 15
     large_text_font = 'fonts/Pixeled.ttf'

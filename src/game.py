@@ -1,7 +1,7 @@
 import os
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "True"
 import pygame as pg
-from math import pi
+from math import pi, sin, cos
 import multiprocessing as mp
 import json
 
@@ -11,7 +11,6 @@ from renderer import Renderer
 from input_handler import InputHandler
 import numpy as np
 from constants import *
-from utils import Utils
 from config import Config
 
 # Contains the game logic and event loop
@@ -23,6 +22,8 @@ class Game:
         self.time_offset = 0
         self.cutting = False
         self.changing_name = False
+        self.saving = False
+        self.save_time = 0
         self.game_time = 0
 
         self.load_fonts()
@@ -37,6 +38,8 @@ class Game:
         self.cursor_rect = self.cursor.get_rect()
         self.fracplant_label = self.medium_text_font.render('', True, WHITE)
         self.fracplant_label_rect = self.fracplant_label.get_rect()
+        self.key_info = self.small_text_font.render('CUT: [Q],    SET NAME: [N],    SAVE: [S],    RESET: [R]', True, WHITE)
+        self.key_info_rect = self.fracplant_label.get_rect(bottom=self.renderer.height+10, left=self.renderer.width-420)
 
         # Fracplant
         origin = [550, self.renderer.height-100]
@@ -134,6 +137,15 @@ class Game:
                 underline_rect.width = 15 
             underline_rect.centerx = self.fracplant_label_rect.centerx
             pg.draw.rect(self.renderer.ui_layer, WHITE, underline_rect)
+        self.renderer.ui_layer.blit(self.key_info, self.key_info_rect)
+        if self.saving:
+            progress = (pg.time.get_ticks() - self.save_time) / 1000
+            text_cutoff_index = max(min(5, round(10*sin(progress * pi))), 0)
+            self.saving_text = self.medium_text_font.render('SAVED'[:text_cutoff_index], True, GREEN)
+            self.saving_text_rect = self.saving_text.get_rect(center=(self.renderer.width/2, self.renderer.height/2))
+            self.renderer.ui_layer.blit(self.saving_text, self.saving_text_rect)
+        if pg.time.get_ticks() - self.save_time > 1000:
+            self.saving = False
 
     # Display calculated fracplants
     def display_fracplants(self):
@@ -193,6 +205,8 @@ class Game:
     
     # Save the fracplant to a json file
     def save(self):
+        self.saving = True
+        self.save_time = pg.time.get_ticks()
         with open("saves/recent.json", 'w') as f:
             data = {
                 "name": self.fracplant.name,
