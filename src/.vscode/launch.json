@@ -8,7 +8,7 @@
             "name": "Python: Fractal Garden",
             "type": "python",
             "request": "launch",
-            "program": "E:/GitHub/Fractal-Garden/src/main.py",
+            "program": "./main.py",
             "console": "integratedTerminal",
             "justMyCode": true
         }

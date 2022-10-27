@@ -207,6 +207,10 @@ class Game:
     def save(self):
         self.saving = True
         self.save_time = pg.time.get_ticks()
+        try:
+            os.mkdir("saves")
+        except FileExistsError:
+            pass
         with open("saves/recent.json", 'w') as f:
             data = {
                 "name": self.fracplant.name,
